@@ -1,0 +1,4 @@
+{
+  "Name": "Multimodal OCR",
+  "Description": "Highly configurable multimodal vision OCR with custom API endpoint, API key, model ID, request body, request headers, prompts, automatic retries, retry limit, timeout, streaming output, and flexible vision-provider compatibility."
+}

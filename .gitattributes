@@ -1,0 +1,7 @@
+# 在所有开发环境中保持文本文件的稳定换行符，避免提交时产生平台相关差异。
+* text=auto eol=lf
+
+# 二进制资源保持原始字节，不执行文本转换。
+*.png binary
+*.spkg binary
+*.dll binary

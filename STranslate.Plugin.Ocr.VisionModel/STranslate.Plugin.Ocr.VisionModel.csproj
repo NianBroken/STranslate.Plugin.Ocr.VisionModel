@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <LangVersion>preview</LangVersion>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+    <AssemblyName>STranslate.Plugin.Ocr.VisionModel</AssemblyName>
+    <RootNamespace>STranslate.Plugin.Ocr.VisionModel</RootNamespace>
+    <RepositoryUrl>https://github.com/NianBroken/STranslate.Plugin.Ocr.VisionModel</RepositoryUrl>
+    <Authors>NianBroken</Authors>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <Version>1.0.1</Version>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>portable</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\.artifacts\Debug\Plugins\STranslate.Plugin.Ocr.VisionModel\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\.artifacts\Release\Plugins\STranslate.Plugin.Ocr.VisionModel\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <EnableAutoPackage>true</EnableAutoPackage>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="STranslate.Plugin" Version="1.0.14" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="plugin.json" CopyToOutputDirectory="Always" />
+    <Content Include="icon.png" CopyToOutputDirectory="Always" />
+    <Content Include="..\LICENSE" Link="LICENSE" CopyToOutputDirectory="Always" />
+    <Content Include="..\NOTICE" Link="NOTICE" CopyToOutputDirectory="Always" />
+    <Content Include="Assets\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Languages\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <EmbeddedResource Include="Assets\validation-image.png" />
+  </ItemGroup>
+</Project>
