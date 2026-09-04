@@ -21,6 +21,7 @@
 - `2026-09-04 22:20` 使用 Release 配置执行 `dotnet build`，结果为 `0` 个警告、`0` 个错误，生成 `STranslate.Plugin.Ocr.VisionModel.spkg`。
 - 最终安装包 SHA-256 为 `81452847105BA465AECFA81951888D7030282FE82AED50AC7BE8781FF705147C`。包根目录直接包含 `plugin.json`、插件 DLL、`.deps.json`、`icon.png`、`Assets/validation-image.png`、`Languages`、`LICENSE` 和 `NOTICE`，没有项目目录嵌套。
 - 将最终 `.spkg` 解压并部署到真实 STranslate 用户插件目录后，于 `2026-09-04 22:21:32` 在宿主日志确认 `Found plugin: 多模态OCR v1.0.1`，随后确认 `✓ 多模态OCR v1.0.1`，作者为 `NianBroken`，程序集为 `STranslate.Plugin.Ocr.VisionModel`。加载过程没有该插件的加载失败记录。
+- `2026-09-04 22:36` 已重新从最终 Release 安装包部署插件并重启真实 STranslate。已安装 DLL 与 Release DLL 的 SHA-256 同为 `B962CBF19094E4093D7101B3B229DE82437C72F83DEEF08F9BF5B1F02DDFFC42`。宿主日志确认共 22 个插件加载成功，失败数为 `0`，其中包括 `多模态OCR v1.0.1`。
 - 日志保存了此前针对内置 PNG 校验图的真实 MiniMax 流式请求。请求得到 HTTP 成功流式响应，最终文本为 `STranslate Vision OCR`、`Validation 2026` 与 `ABC 123`。此前正式 OCR 的 BMP 输入也已在同一真实宿主中记录为无损 PNG 标准化并成功获取流式响应。
 - 当前运行环境没有向界面控制通道公开 STranslate 的桌面 WPF 控件，因此没有伪造设置页点击、全屏拖拽或 GitHub 文字按钮的人工界面记录。发布包已部署并由真实宿主完成加载，未覆盖的人工视觉检查必须在可操作的桌面界面中执行。
 
