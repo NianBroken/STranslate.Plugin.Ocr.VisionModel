@@ -15,6 +15,9 @@
 - 提示词区域标题为“提示词配置”，并继续使用 STranslate 官方提示词编辑窗口。
 - 插件图标直接使用 STranslate `src/STranslate/Resources/ocr.png`。源码图标与插件图标 SHA-256 均为 `578242DB43F31A2714CA2534F4FC4D97C94806B185C980DEB35EC4F9ACB248F0`。
 - 设置页底部使用 STranslate 原生 `HyperlinkButton`，跳转地址为 `https://github.com/NianBroken/STranslate.Plugin.Ocr.VisionModel`。
+- 公开源代码仓库已创建并推送至 `https://github.com/NianBroken/STranslate.Plugin.Ocr.VisionModel`。默认分支为 `main`，仓库根目录中的 `STranslate.Plugin.Ocr.VisionModel/plugin.json` 符合 STranslate 插件市场读取路径。
+- GitHub Release `v1.0.1` 已发布，安装包资产名称为 `STranslate.Plugin.Ocr.VisionModel.spkg`，下载地址为 `https://github.com/NianBroken/STranslate.Plugin.Ocr.VisionModel/releases/download/v1.0.1/STranslate.Plugin.Ocr.VisionModel.spkg`。
+- 已向 STranslate 官方 `STranslate-doc` 仓库提交插件市场登记 PR `#24`，地址为 `https://github.com/STranslate/STranslate-doc/pull/24`。该 PR 仅修改 `vitepress/plugins.json`，登记 `NianBroken/STranslate.Plugin.Ocr.VisionModel`。市场展示将在官方合并该 PR 后生效。
 - `2026-09-04 22:20` 使用 Release 配置执行 `dotnet build`，结果为 `0` 个警告、`0` 个错误，生成 `STranslate.Plugin.Ocr.VisionModel.spkg`。
 - 最终安装包 SHA-256 为 `81452847105BA465AECFA81951888D7030282FE82AED50AC7BE8781FF705147C`。包根目录直接包含 `plugin.json`、插件 DLL、`.deps.json`、`icon.png`、`Assets/validation-image.png`、`Languages`、`LICENSE` 和 `NOTICE`，没有项目目录嵌套。
 - 将最终 `.spkg` 解压并部署到真实 STranslate 用户插件目录后，于 `2026-09-04 22:21:32` 在宿主日志确认 `Found plugin: 多模态OCR v1.0.1`，随后确认 `✓ 多模态OCR v1.0.1`，作者为 `NianBroken`，程序集为 `STranslate.Plugin.Ocr.VisionModel`。加载过程没有该插件的加载失败记录。
