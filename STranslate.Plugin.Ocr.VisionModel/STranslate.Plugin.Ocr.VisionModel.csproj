@@ -41,7 +41,7 @@
     <Content Include="plugin.json" CopyToOutputDirectory="Always" />
     <Content Include="icon.png" CopyToOutputDirectory="Always" />
     <Content Include="..\LICENSE" Link="LICENSE" CopyToOutputDirectory="Always" />
-    <Content Include="..\NOTICE" Link="NOTICE" CopyToOutputDirectory="Always" />
+    <Content Include="..\THIRD-PARTY-LICENSES" Link="THIRD-PARTY-LICENSES" CopyToOutputDirectory="Always" />
     <Content Include="Assets\**\*" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Languages\**\*" CopyToOutputDirectory="PreserveNewest" />
     <EmbeddedResource Include="Assets\validation-image.png" />

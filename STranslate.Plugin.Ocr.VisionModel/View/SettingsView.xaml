@@ -56,7 +56,7 @@
                     </ScrollViewer>
                 </ikw:SimpleStackPanel>
             </ui:SettingsCard>
-            <ui:HyperlinkButton HorizontalAlignment="Left" Content="在 GitHub 上查看多模态OCR" NavigateUri="https://github.com/NianBroken/STranslate.Plugin.Ocr.VisionModel" />
+            <ui:HyperlinkButton HorizontalAlignment="Left" Content="在 GitHub 上查看" NavigateUri="https://github.com/NianBroken/STranslate.Plugin.Ocr.VisionModel" />
         </ikw:SimpleStackPanel>
     </ui:ScrollViewerEx>
 </UserControl>

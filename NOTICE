@@ -1,7 +1,0 @@
-多模态OCR 使用了 STranslate 项目中的 OCR 图标资源：
-
-文件：src/STranslate/Resources/ocr.png
-来源：https://github.com/STranslate/STranslate
-原项目许可证：MIT License
-
-该图标以原始 PNG 字节复制到本项目的 STranslate.Plugin.Ocr.VisionModel/icon.png，未作修改。

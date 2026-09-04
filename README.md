@@ -21,7 +21,7 @@ API 密钥使用可见文本框，但日志和错误信息始终脱敏。提示�
 
 流式超时时间表示相邻两条非空响应之间的最大等待时间。只要服务持续发送数据，请求总时长可以超过配置值。非流式请求使用完整请求生命周期超时。
 
-设置页底部的“在 GitHub 上查看多模态OCR”文字按钮通过 STranslate 原生 `HyperlinkButton` 使用系统默认浏览器打开项目仓库。
+设置页底部的“在 GitHub 上查看”文字按钮通过 STranslate 原生 `HyperlinkButton` 使用系统默认浏览器打开项目仓库。
 
 ## 构建与安装
 
@@ -37,13 +37,12 @@ Release 安装包路径为：
 
 在 STranslate 插件管理页面导入该 `.spkg`，重启宿主后选择“多模态OCR”。安装包根目录直接包含 `plugin.json`、插件 DLL、`icon.png`、`Assets` 和 `Languages`，符合 STranslate 插件安装结构。
 
-## 日志与验证
+## 日志
 
-插件通过 `Context.Logger` 记录请求和响应时间、脱敏请求头、请求体 RAW、响应体 RAW、流式响应行、图片哈希、重试与异常信息。真实验证记录位于 [VALIDATION-RECORD.md](VALIDATION-RECORD.md)。
+插件通过 `Context.Logger` 记录请求和响应时间、脱敏请求头、请求体 RAW、响应体 RAW、流式响应行、图片哈希、重试与异常信息。
 
 ## 作者、仓库与许可证
 
 - 作者：[NianBroken](https://www.klaio.top/)
 - 仓库：<https://github.com/NianBroken/STranslate.Plugin.Ocr.VisionModel>
 - 许可证：[Apache License 2.0](LICENSE)
-- 图标来源：STranslate `Resources/ocr.png`，版权与第三方说明见 [NOTICE](NOTICE)。
