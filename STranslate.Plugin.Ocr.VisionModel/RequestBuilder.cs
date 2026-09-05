@@ -115,7 +115,7 @@ internal static class RequestBuilder
         foreach (var property in source)
         {
             var propertyPath = string.IsNullOrEmpty(path) ? property.Key : $"{path}.{property.Key}";
-            if (string.IsNullOrEmpty(path) && ManagedMessageKeys.Contains(property.Key))
+            if (ManagedMessageKeys.Contains(property.Key))
             {
                 ignoredPaths.Add(propertyPath);
                 continue;
