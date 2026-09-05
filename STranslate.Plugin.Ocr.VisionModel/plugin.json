@@ -3,7 +3,7 @@
   "Name": "多模态OCR",
   "Description": "高度可配置的多模态视觉 OCR 插件，支持自定义 API 地址、API 密钥、模型 ID、请求体、请求头和提示词，提供自动重试、最大请求次数、超时时间、流式输出及多种视觉模型协议适配能力。",
   "Author": "NianBroken",
-  "Version": "1.0.2",
+  "Version": "1.0.3",
   "Website": "https://github.com/NianBroken/STranslate.Plugin.Ocr.VisionModel",
   "ExecuteFileName": "STranslate.Plugin.Ocr.VisionModel.dll",
   "IconPath": "icon.png"

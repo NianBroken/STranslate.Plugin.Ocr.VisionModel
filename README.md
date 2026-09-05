@@ -7,6 +7,8 @@
 - 自定义 API 地址、API 密钥和模型 ID。
 - 自定义 JSON 请求体与请求头。请求体保留合法的非消息字段，`messages`、`contents`、`input` 及提示词和图片内容由插件统一生成，`model`、`stream` 和供应商扩展参数仍可由用户覆盖。
 - `thinking` 按供应商协议从自定义请求体原样发送。以 MiniMax 为例，应填写在请求体中，例如 `{"thinking":{"type":"disabled"}}`，而不是请求头。
+- 自定义请求体中的 `messages`、`contents`、`input` 以及提示词和图片节点由插件生成，用户填写的这些重复字段会被忽略。其他字段会按原始 JSON 类型递归合并，`model`、`stream`、`temperature` 和供应商扩展字段可以覆盖默认值。
+- 自定义请求头中的 `Authorization`、`Accept` 和 `Content-Type` 由插件管理，其他合法请求头会按用户填写的类型转换为 HTTP 请求头值。
 - 使用 STranslate 官方提示词配置维护 system、user 和其他角色提示词。
 - 默认流式输出。用户可通过请求体将 `stream` 设置为 `false` 使用非流式接口。
 - 自动重试，并可配置最大请求次数与超时时间。

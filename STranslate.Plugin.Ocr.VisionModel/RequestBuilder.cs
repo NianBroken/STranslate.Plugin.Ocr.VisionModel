@@ -18,6 +18,14 @@ internal static class RequestBuilder
         "contents",
         "input"
     };
+    private static readonly HashSet<string> ManagedMessageItemKeys = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "role", "content", "parts", "type", "source", "image_url", "inline_data", "input_text", "input_image"
+    };
+    private static readonly HashSet<string> ManagedHeaderKeys = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "authorization", "accept", "content-type"
+    };
 
     public static BuiltRequest Build(Settings settings, byte[] imageData, Prompt prompt)
     {
@@ -32,9 +40,15 @@ internal static class RequestBuilder
         var messageShape = DetectMessageShape(customBody);
         var request = CreateDefaultRequest(settings.ModelId, promptItems, systemPrompt, userPrompt, imageDataUrl, messageShape);
         var ignoredPaths = new List<string>();
+        var ignoredHeaderKeys = new List<string>();
+        var customBodyFields = customBody is null ? new List<string>() : DescribeFields(customBody);
+        var customHeaderFields = new List<string>();
 
         if (customBody is not null)
+        {
+            CollectManagedMessagePaths(customBody, ignoredPaths);
             MergeCustomFields(request, customBody, ignoredPaths);
+        }
 
         InjectPromptAndImage(request, promptItems, systemPrompt, userPrompt, imageDataUrl, mimeType);
 
@@ -47,11 +61,21 @@ internal static class RequestBuilder
         if (!string.IsNullOrWhiteSpace(settings.RequestHeadersJson))
         {
             var customHeaders = ParseObject(settings.RequestHeadersJson, "自定义请求头");
+            customHeaderFields = DescribeFields(customHeaders);
             foreach (var property in customHeaders)
+            {
+                if (string.IsNullOrWhiteSpace(property.Key))
+                    throw new FormatException("自定义请求头包含空的请求头名称。");
+                if (ManagedHeaderKeys.Contains(property.Key))
+                {
+                    ignoredHeaderKeys.Add(property.Key);
+                    continue;
+                }
                 headers[property.Key] = ConvertJsonValueToHeader(property.Value);
+            }
         }
 
-        return new BuiltRequest(request, headers, request.ToJsonString(new JsonSerializerOptions { WriteIndented = false }), mimeType, ignoredPaths);
+        return new BuiltRequest(request, headers, request.ToJsonString(new JsonSerializerOptions { WriteIndented = false }), mimeType, ignoredPaths, ignoredHeaderKeys, customBodyFields, customHeaderFields);
     }
 
     private static JsonObject CreateDefaultRequest(string modelId, IReadOnlyList<PromptItem> promptItems, string systemPrompt, string userPrompt, string imageDataUrl, MessageShape messageShape)
@@ -115,9 +139,8 @@ internal static class RequestBuilder
         foreach (var property in source)
         {
             var propertyPath = string.IsNullOrEmpty(path) ? property.Key : $"{path}.{property.Key}";
-            if (ManagedMessageKeys.Contains(property.Key))
+            if (string.IsNullOrEmpty(path) && ManagedMessageKeys.Contains(property.Key))
             {
-                ignoredPaths.Add(propertyPath);
                 continue;
             }
 
@@ -134,6 +157,32 @@ internal static class RequestBuilder
                 target[existingName] = property.Value?.DeepClone();
             else
                 target[property.Key] = property.Value?.DeepClone();
+        }
+    }
+
+    /// <summary>
+    /// 记录用户请求体中由插件生成的消息节点和消息项字段，便于日志定位冲突字段。
+    /// </summary>
+    private static void CollectManagedMessagePaths(JsonObject source, ICollection<string> ignoredPaths)
+    {
+        foreach (var rootProperty in source)
+        {
+            if (!ManagedMessageKeys.Contains(rootProperty.Key))
+                continue;
+            var rootPath = rootProperty.Key;
+            ignoredPaths.Add(rootPath);
+            if (rootProperty.Value is not JsonArray items)
+                continue;
+            for (var index = 0; index < items.Count; index++)
+            {
+                if (items[index] is not JsonObject item)
+                    continue;
+                foreach (var property in item)
+                {
+                    if (ManagedMessageItemKeys.Contains(property.Key))
+                        ignoredPaths.Add($"{rootPath}[{index}].{property.Key}");
+                }
+            }
         }
     }
 
@@ -342,6 +391,47 @@ internal static class RequestBuilder
         if (value is JsonValue jsonValue && jsonValue.TryGetValue<string>(out var stringValue)) return stringValue;
         return value.ToJsonString(new JsonSerializerOptions { WriteIndented = false });
     }
+
+    /// <summary>
+    /// 枚举用户配置中的全部字段路径和 JSON 类型。该诊断信息只包含字段名和类型，不包含密钥值。
+    /// </summary>
+    private static List<string> DescribeFields(JsonNode node, string path = "")
+    {
+        var result = new List<string>();
+        if (node is JsonObject objectNode)
+        {
+            foreach (var property in objectNode)
+            {
+                var propertyPath = string.IsNullOrEmpty(path) ? property.Key : $"{path}.{property.Key}";
+                result.Add($"{propertyPath}:{GetJsonType(property.Value)}");
+                if (property.Value is not null)
+                    result.AddRange(DescribeFields(property.Value, propertyPath));
+            }
+        }
+        else if (node is JsonArray arrayNode)
+        {
+            for (var index = 0; index < arrayNode.Count; index++)
+            {
+                var itemPath = $"{path}[{index}]";
+                result.Add($"{itemPath}:{GetJsonType(arrayNode[index])}");
+                if (arrayNode[index] is not null)
+                    result.AddRange(DescribeFields(arrayNode[index]!, itemPath));
+            }
+        }
+        return result;
+    }
+
+    /// <summary>将 JSON 节点映射为稳定的类型名称，保证日志能够区分对象、数组和基本值。</summary>
+    private static string GetJsonType(JsonNode? value) => value switch
+    {
+        null => "null",
+        JsonObject => "object",
+        JsonArray => "array",
+        JsonValue jsonValue when jsonValue.TryGetValue<string>(out _) => "string",
+        JsonValue jsonValue when jsonValue.TryGetValue<bool>(out _) => "boolean",
+        JsonValue => "number",
+        _ => "unknown"
+    };
 }
 
 internal sealed record BuiltRequest(
@@ -349,7 +439,10 @@ internal sealed record BuiltRequest(
     Dictionary<string, string> Headers,
     string RawBody,
     string MimeType,
-    IReadOnlyList<string> IgnoredCustomPaths);
+    IReadOnlyList<string> IgnoredCustomPaths,
+    IReadOnlyList<string> IgnoredCustomHeaderKeys,
+    IReadOnlyList<string> CustomBodyFields,
+    IReadOnlyList<string> CustomHeaderFields);
 
 /// <summary>视觉请求中承载消息的常见根级结构。</summary>
 internal enum MessageShape
