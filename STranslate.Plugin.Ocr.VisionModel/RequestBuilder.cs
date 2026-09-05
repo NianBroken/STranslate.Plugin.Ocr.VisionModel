@@ -7,26 +7,34 @@ using STranslate.Plugin;
 
 /// <summary>
 /// 构造视觉模型请求，并将用户输入与插件内置协议合并。
-/// 内置字段提供可用的 OpenAI 兼容请求，用户填写的同名字段拥有更高优先级。
+/// 内置消息字段由插件统一生成，用户填写的非消息字段保留原始类型并覆盖同名默认值。
 /// </summary>
 internal static class RequestBuilder
 {
     private const string DefaultAccept = "text/event-stream";
+    private static readonly HashSet<string> ManagedMessageKeys = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "messages",
+        "contents",
+        "input"
+    };
 
     public static BuiltRequest Build(Settings settings, byte[] imageData, Prompt prompt)
     {
         var mimeType = ImageDataHelper.DetectMimeType(imageData);
         var imageDataUrl = $"data:{mimeType};base64,{Convert.ToBase64String(imageData)}";
+        JsonObject? customBody = null;
+        if (!string.IsNullOrWhiteSpace(settings.RequestBodyJson))
+            customBody = ParseObject(settings.RequestBodyJson, "自定义请求体");
         var promptItems = prompt.Items.Select(item => item.Clone()).ToList();
         var systemPrompt = promptItems.FirstOrDefault(item => string.Equals(item.Role, "system", StringComparison.OrdinalIgnoreCase))?.Content ?? string.Empty;
         var userPrompt = promptItems.LastOrDefault(item => string.Equals(item.Role, "user", StringComparison.OrdinalIgnoreCase))?.Content ?? string.Empty;
-        var request = CreateDefaultRequest(settings.ModelId, promptItems, systemPrompt, userPrompt, imageDataUrl);
+        var messageShape = DetectMessageShape(customBody);
+        var request = CreateDefaultRequest(settings.ModelId, promptItems, systemPrompt, userPrompt, imageDataUrl, messageShape);
+        var ignoredPaths = new List<string>();
 
-        if (!string.IsNullOrWhiteSpace(settings.RequestBodyJson))
-        {
-            var custom = ParseObject(settings.RequestBodyJson, "自定义请求体");
-            MergeObjects(request, custom);
-        }
+        if (customBody is not null)
+            MergeCustomFields(request, customBody, ignoredPaths);
 
         InjectPromptAndImage(request, promptItems, systemPrompt, userPrompt, imageDataUrl, mimeType);
 
@@ -43,10 +51,10 @@ internal static class RequestBuilder
                 headers[property.Key] = ConvertJsonValueToHeader(property.Value);
         }
 
-        return new BuiltRequest(request, headers, request.ToJsonString(new JsonSerializerOptions { WriteIndented = false }), mimeType);
+        return new BuiltRequest(request, headers, request.ToJsonString(new JsonSerializerOptions { WriteIndented = false }), mimeType, ignoredPaths);
     }
 
-    private static JsonObject CreateDefaultRequest(string modelId, IReadOnlyList<PromptItem> promptItems, string systemPrompt, string userPrompt, string imageDataUrl)
+    private static JsonObject CreateDefaultRequest(string modelId, IReadOnlyList<PromptItem> promptItems, string systemPrompt, string userPrompt, string imageDataUrl, MessageShape messageShape)
     {
         var messages = new JsonArray();
         var lastUserIndex = -1;
@@ -72,24 +80,53 @@ internal static class RequestBuilder
         if (lastUserIndex < 0)
             messages.Add(CreateOpenAiUserMessage(userPrompt, imageDataUrl));
 
-        return new JsonObject
+        var request = new JsonObject
         {
             ["model"] = modelId,
-            ["messages"] = messages,
             ["stream"] = true
         };
+        request[GetMessagePropertyName(messageShape)] = messageShape == MessageShape.Messages
+            ? messages
+            : new JsonArray();
+        return request;
     }
 
-    private static void MergeObjects(JsonObject target, JsonObject source)
+    private static MessageShape DetectMessageShape(JsonObject? customBody)
+    {
+        if (customBody is null) return MessageShape.Messages;
+        if (customBody.Any(property => string.Equals(property.Key, "contents", StringComparison.OrdinalIgnoreCase))) return MessageShape.Contents;
+        if (customBody.Any(property => string.Equals(property.Key, "input", StringComparison.OrdinalIgnoreCase))) return MessageShape.Input;
+        return MessageShape.Messages;
+    }
+
+    private static string GetMessagePropertyName(MessageShape messageShape) => messageShape switch
+    {
+        MessageShape.Input => "input",
+        MessageShape.Contents => "contents",
+        _ => "messages"
+    };
+
+    /// <summary>
+    /// 递归合并用户自定义的非消息字段。消息根节点及其提示词和图片内容由插件统一生成，
+    /// 用户重复填写时记录路径并忽略，其他字段保留原始 JSON 类型和嵌套结构。
+    /// </summary>
+    private static void MergeCustomFields(JsonObject target, JsonObject source, ICollection<string> ignoredPaths, string path = "")
     {
         foreach (var property in source)
         {
+            var propertyPath = string.IsNullOrEmpty(path) ? property.Key : $"{path}.{property.Key}";
+            if (string.IsNullOrEmpty(path) && ManagedMessageKeys.Contains(property.Key))
+            {
+                ignoredPaths.Add(propertyPath);
+                continue;
+            }
+
             var existingName = target.Select(item => item.Key)
                 .FirstOrDefault(name => string.Equals(name, property.Key, StringComparison.OrdinalIgnoreCase));
 
             if (existingName is not null && target[existingName] is JsonObject existingObject && property.Value is JsonObject sourceObject)
             {
-                MergeObjects(existingObject, sourceObject);
+                MergeCustomFields(existingObject, sourceObject, ignoredPaths, propertyPath);
                 continue;
             }
 
@@ -131,6 +168,10 @@ internal static class RequestBuilder
             if (first is null)
             {
                 contents.Add(CreateGeminiContent(userPrompt, imageDataUrl, mimeType));
+                root["system_instruction"] = new JsonObject
+                {
+                    ["parts"] = new JsonArray { new JsonObject { ["text"] = systemPrompt } }
+                };
                 return;
             }
 
@@ -307,4 +348,13 @@ internal sealed record BuiltRequest(
     JsonObject Body,
     Dictionary<string, string> Headers,
     string RawBody,
-    string MimeType);
+    string MimeType,
+    IReadOnlyList<string> IgnoredCustomPaths);
+
+/// <summary>视觉请求中承载消息的常见根级结构。</summary>
+internal enum MessageShape
+{
+    Messages,
+    Input,
+    Contents
+}

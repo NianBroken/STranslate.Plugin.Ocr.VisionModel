@@ -208,6 +208,7 @@ public sealed class Main : ObservableObject, IOcrPlugin
             ContentType = "application/json"
         };
         var headersForLog = string.Join(", ", built.Headers.Select(pair => $"{pair.Key}={RedactHeader(pair.Key, pair.Value)}"));
+        var ignoredCustomPaths = built.IgnoredCustomPaths.Count == 0 ? "无" : string.Join(", ", built.IgnoredCustomPaths);
         _context.Logger.LogInformation(
             "多模态OCR 请求开始。Attempt={Attempt}, RequestTime={RequestTime}, Url={Url}, Model={Model}, ImageBytes={ImageBytes}, MimeType={MimeType}, Sha256={Sha256}, Headers={Headers}, TimeoutSeconds={TimeoutSeconds}, TimeoutMode={TimeoutMode}, RequestBodyRaw={RequestBodyRaw}",
             attempt,
@@ -221,6 +222,9 @@ public sealed class Main : ObservableObject, IOcrPlugin
             _settings.TimeoutSeconds.Value,
             streamEnabled ? StreamingIdleTimeoutMode : NonStreamingTotalTimeoutMode,
             built.RawBody);
+        _context.Logger.LogInformation(
+            "多模态OCR 自定义请求体字段处理。IgnoredManagedPaths={IgnoredManagedPaths}, CustomFieldsRemain=非消息字段均已保留",
+            ignoredCustomPaths);
         _context.Logger.LogInformation(
             "多模态OCR 图片传输信息。Attempt={Attempt}, OriginalImageBytes={OriginalImageBytes}, OriginalMimeType={OriginalMimeType}, OriginalSha256={OriginalSha256}, SentImageBytes={SentImageBytes}, SentMimeType={SentMimeType}, SentSha256={SentSha256}, LosslessBmpToPng={LosslessBmpToPng}",
             attempt,
