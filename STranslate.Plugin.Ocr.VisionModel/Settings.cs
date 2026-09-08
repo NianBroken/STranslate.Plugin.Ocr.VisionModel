@@ -24,10 +24,10 @@ public sealed class Settings
     public string RequestHeadersJson { get; set; } = string.Empty;
 
     /// <summary>
-    /// 使用 STranslate 官方 Prompt 模型保存提示词配置。默认创建一个启用中的空提示词，
-    /// 其中同时包含 system 和 user 项，用户可以通过宿主提供的提示词编辑窗口维护内容。
+    /// 使用 STranslate 官方 Prompt 模型保存提示词配置。
+    /// 空集合表示用户尚未通过宿主提供的提示词编辑窗口完成配置。
     /// </summary>
-    public List<Prompt> Prompts { get; set; } = null!;
+    public List<Prompt> Prompts { get; set; } = [];
 
     /// <summary>单次 OCR 请求允许使用的最大请求次数。</summary>
     public int? MaxRequestCount { get; set; }

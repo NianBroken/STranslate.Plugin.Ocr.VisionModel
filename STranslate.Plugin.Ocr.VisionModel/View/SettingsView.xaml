@@ -11,8 +11,10 @@
     d:DesignHeight="700"
     d:DesignWidth="760"
     mc:Ignorable="d">
+    <!-- 页面使用宿主提供的纵向滚动容器承载全部配置卡片，窗口变窄时由滚轮滚动继续访问底部内容。 -->
     <ui:ScrollViewerEx HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
         <ikw:SimpleStackPanel HorizontalAlignment="Stretch" Spacing="12">
+            <!-- 每张配置卡片采用垂直内容布局，标题说明位于上方，输入控件位于下方，避免窗口放大后出现左右错位。 -->
             <ui:SettingsCard HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" MinWidth="0" ContentAlignment="Vertical" Description="填写完整 API 地址，根地址会自动补全 OpenAI 兼容路径。地址末尾加 # 可使用原样地址。" Header="API 地址">
                 <TextBox HorizontalAlignment="Stretch" MinWidth="0" Padding="12,6,12,6" BorderBrush="{DynamicResource {x:Static ui:ThemeKeys.ControlStrokeColorDefaultBrushKey}}" BorderThickness="1" Text="{Binding ApiUrl, UpdateSourceTrigger=PropertyChanged}" />
             </ui:SettingsCard>
@@ -56,6 +58,7 @@
                     </ScrollViewer>
                 </ikw:SimpleStackPanel>
             </ui:SettingsCard>
+            <!-- 仓库入口使用宿主原生超链接按钮，由 WPF 按 NavigateUri 调用操作系统默认浏览器。 -->
             <ui:HyperlinkButton HorizontalAlignment="Left" Content="在 GitHub 上查看" NavigateUri="https://github.com/NianBroken/STranslate.Plugin.Ocr.VisionModel" />
         </ikw:SimpleStackPanel>
     </ui:ScrollViewerEx>

@@ -12,9 +12,11 @@
     <AssemblyName>STranslate.Plugin.Ocr.VisionModel</AssemblyName>
     <RootNamespace>STranslate.Plugin.Ocr.VisionModel</RootNamespace>
     <RepositoryUrl>https://github.com/NianBroken/STranslate.Plugin.Ocr.VisionModel</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://www.klaio.top/</PackageProjectUrl>
     <Authors>NianBroken</Authors>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.0.3</Version>
+    <Version>1.0.4</Version>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -41,7 +43,6 @@
     <Content Include="plugin.json" CopyToOutputDirectory="Always" />
     <Content Include="icon.png" CopyToOutputDirectory="Always" />
     <Content Include="..\LICENSE" Link="LICENSE" CopyToOutputDirectory="Always" />
-    <Content Include="..\THIRD-PARTY-LICENSES" Link="THIRD-PARTY-LICENSES" CopyToOutputDirectory="Always" />
     <Content Include="Assets\**\*" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Languages\**\*" CopyToOutputDirectory="PreserveNewest" />
     <EmbeddedResource Include="Assets\validation-image.png" />

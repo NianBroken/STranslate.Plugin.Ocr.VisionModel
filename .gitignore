@@ -2,8 +2,16 @@
 .artifacts/
 [Bb]in/
 [Oo]bj/
+[Pp]ublish/
+[Pp]ackages/
+node_modules/
+.nuget/
 *.spkg
 TestResults/
+coverage/
+coverage.*
+*.coverage
+*.coveragexml
 
 # IDE 与编辑器本地配置
 .vs/
@@ -26,9 +34,24 @@ TestResults/
 *.temp
 *.bak
 *.dmp
+*.stackdump
 *.nupkg
 *.snupkg
 
 # 本机密钥与本地配置
 *.secrets.json
 appsettings.Development.json
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12
+*.pem
+*.key
+AI密钥.txt
+GitHub密钥.txt
+*密钥*.txt
+PortableConfig/
+ehthumbs.db
+$RECYCLE.BIN/
+~$*

@@ -11,7 +11,7 @@ namespace STranslate.Plugin.Ocr.VisionModel;
 /// 多模态OCR 插件主入口。
 /// 插件遵循 STranslate 的 IOcrPlugin 契约，并把所有网络、日志和配置能力交给宿主上下文处理。
 /// </summary>
-public sealed class Main : ObservableObject, IOcrPlugin
+public sealed class Main : ObservableObject, IOcrPlugin, ILlm
 {
     private const string StreamingIdleTimeoutMode = "流式相邻响应空闲超时";
     private const string NonStreamingTotalTimeoutMode = "非流式总超时";
@@ -31,15 +31,22 @@ public sealed class Main : ObservableObject, IOcrPlugin
     public Prompt? SelectedPrompt
     {
         get => Prompts.FirstOrDefault(prompt => prompt.IsEnabled);
-        set
-        {
-            if (value is null || !Prompts.Contains(value)) return;
-            foreach (var prompt in Prompts)
-                prompt.IsEnabled = ReferenceEquals(prompt, value);
-            OnPropertyChanged();
-            _settings.Prompts = Prompts.Select(prompt => prompt.Clone()).ToList();
-            _context.SaveSettingStorage<Settings>();
-        }
+        set => SelectPrompt(value);
+    }
+
+    /// <summary>
+    /// 使用 STranslate 官方 ILlm 选择模式更新启用状态并持久化提示词配置。
+    /// </summary>
+    public void SelectPrompt(Prompt? prompt)
+    {
+        if (prompt is null || !Prompts.Contains(prompt)) return;
+
+        foreach (var item in Prompts)
+            item.IsEnabled = ReferenceEquals(item, prompt);
+
+        OnPropertyChanged(nameof(SelectedPrompt));
+        _settings.Prompts = Prompts.Select(item => item.Clone()).ToList();
+        _context.SaveSettingStorage<Settings>();
     }
 
     public IEnumerable<LangEnum> SupportedLanguages => Enum.GetValues<LangEnum>();
@@ -60,34 +67,9 @@ public sealed class Main : ObservableObject, IOcrPlugin
     {
         _context = context;
         _settings = context.LoadSettingStorage<Settings>();
+        _settings.Prompts ??= [];
         Prompts.Clear();
-        if (_settings.Prompts is null || _settings.Prompts.Count == 0)
-        {
-            _settings.Prompts =
-            [
-                new Prompt("多模态OCR",
-                [
-                    new PromptItem("system", string.Empty),
-                    new PromptItem("user", string.Empty)
-                ], true)
-            ];
-            _context.SaveSettingStorage<Settings>();
-        }
-
-        foreach (var prompt in _settings.Prompts)
-        {
-            // 仅迁移早期版本自动创建的默认名称，用户自行创建的提示词名称保持不变。
-            if (string.Equals(prompt.Name, "视觉模型 OCR", StringComparison.Ordinal))
-                prompt.Name = "多模态OCR";
-            Prompts.Add(prompt);
-        }
-
-        if (Prompts.All(prompt => !prompt.IsEnabled) && Prompts.Count > 0)
-        {
-            Prompts[0].IsEnabled = true;
-            _settings.Prompts = Prompts.Select(prompt => prompt.Clone()).ToList();
-            _context.SaveSettingStorage<Settings>();
-        }
+        _settings.Prompts.ForEach(Prompts.Add);
     }
 
     public string? GetLanguage(LangEnum langEnum) => null;
@@ -109,9 +91,11 @@ public sealed class Main : ObservableObject, IOcrPlugin
             result.OcrContents.Add(new OcrContent { Text = finalText });
             return result;
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException ex)
         {
-            throw;
+            var message = BuildFailureMessage("OCR 识别已取消", ex, 0, null);
+            _context.Logger.LogWarning(ex, "多模态OCR 已取消。{Message}", message);
+            return CreateFailureResult(message, DateTimeOffset.Now - started);
         }
         catch (Exception ex)
         {
@@ -335,6 +319,10 @@ public sealed class Main : ObservableObject, IOcrPlugin
                 streamEnabled ? StreamingIdleTimeoutMode : NonStreamingTotalTimeoutMode,
                 parser.CurrentText.Length);
             return new AttemptDiagnostics(parser.CurrentText, rawResponse.ToString(), requestStarted, completed, url, built.RawBody, headersForLog, responseLineCount, firstResponseAt, lastResponseAt, maxInterResponseWaitMilliseconds, streamEnabled ? StreamingIdleTimeoutMode : NonStreamingTotalTimeoutMode);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception ex)
         {

@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using System.ComponentModel;
 using System.Windows;
 
@@ -45,7 +46,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     [ObservableProperty] public partial string RequestHeadersJson { get; set; } = string.Empty;
     [ObservableProperty] public partial double? MaxRequestCount { get; set; }
     [ObservableProperty] public partial double? TimeoutSeconds { get; set; }
-    [ObservableProperty] public partial string ValidationResult { get; private set; } = "校验尚未返回结果。";
+    [ObservableProperty] public partial string ValidationResult { get; private set; } = "校验尚未开始。";
     [ObservableProperty] public partial bool IsValidating { get; private set; }
 
     private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -57,8 +58,8 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
             case nameof(ModelId): _settings.ModelId = ModelId; break;
             case nameof(RequestBodyJson): _settings.RequestBodyJson = RequestBodyJson; break;
             case nameof(RequestHeadersJson): _settings.RequestHeadersJson = RequestHeadersJson; break;
-            case nameof(MaxRequestCount): _settings.MaxRequestCount = ToNullableInt(MaxRequestCount); break;
-            case nameof(TimeoutSeconds): _settings.TimeoutSeconds = ToNullableInt(TimeoutSeconds); break;
+            case nameof(MaxRequestCount): _settings.MaxRequestCount = ConvertNumber(MaxRequestCount); break;
+            case nameof(TimeoutSeconds): _settings.TimeoutSeconds = ConvertNumber(TimeoutSeconds); break;
             default: return;
         }
         _context.SaveSettingStorage<Settings>();
@@ -71,7 +72,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         _validationCancellation?.Dispose();
         _validationCancellation = new CancellationTokenSource();
         IsValidating = true;
-        ValidationResult = "校验尚未返回结果。";
+        ValidationResult = "正在发送校验请求……";
 
         try
         {
@@ -90,7 +91,8 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex)
         {
-            ValidationResult = ex.Message;
+            ValidationResult = FormatValidationError(ex);
+            _context.Logger.LogError(ex, "多模态OCR 校验失败。{Message}", ValidationResult);
         }
         finally
         {
@@ -107,13 +109,24 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         // 提示词编辑窗口直接维护宿主提供的提示词对象，保存时复制为设置存储使用的独立列表。
         _settings.Prompts = _main.Prompts.Select(prompt => prompt.Clone()).ToList();
         _context.SaveSettingStorage<Settings>();
+        _main.SelectedPrompt = _main.Prompts.FirstOrDefault(prompt => prompt.IsEnabled);
     }
 
-    private static int? ToNullableInt(double? value)
+    private static int? ConvertNumber(double? value) => value is null || double.IsNaN(value.Value) || double.IsInfinity(value.Value) ? null : (int)Math.Truncate(value.Value);
+
+    private static string FormatValidationError(Exception exception)
     {
-        if (value is null || double.IsNaN(value.Value) || double.IsInfinity(value.Value)) return null;
-        // 向下取整可以保留低于限制的输入状态，例如 0.5 会保存为 0 并由统一校验给出明确错误。
-        return (int)Math.Truncate(value.Value);
+        var requestDiagnostics = exception.Message.Contains("已执行请求次数：", StringComparison.Ordinal)
+            ? exception.Message
+            : string.Join(Environment.NewLine,
+                $"异常信息：{exception.Message}",
+                "已执行请求次数：0",
+                "最近一次请求诊断：无");
+        return string.Join(Environment.NewLine,
+            "多模态OCR 校验失败",
+            $"异常类型：{exception.GetType().FullName}",
+            requestDiagnostics,
+            $"异常堆栈：{exception}");
     }
 
     public void Dispose()
