@@ -13,10 +13,10 @@
     <RootNamespace>STranslate.Plugin.Ocr.VisionModel</RootNamespace>
     <RepositoryUrl>https://github.com/NianBroken/STranslate.Plugin.Ocr.VisionModel</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageProjectUrl>https://www.klaio.top/</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/NianBroken/STranslate.Plugin.Ocr.VisionModel</PackageProjectUrl>
     <Authors>NianBroken</Authors>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.0.4</Version>
+    <Version>1.0.5</Version>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>

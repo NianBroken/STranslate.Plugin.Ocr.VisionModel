@@ -46,6 +46,6 @@ Release 安装包路径为：
 
 ## 作者、仓库与许可证
 
-- 作者：[NianBroken](https://www.klaio.top/)
+- 作者：NianBroken
 - 仓库：<https://github.com/NianBroken/STranslate.Plugin.Ocr.VisionModel>
 - 许可证：[Apache License 2.0](LICENSE)
