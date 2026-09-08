@@ -28,9 +28,7 @@ jobs:
         run: dotnet build ".\$env:REPO_NAME\$env:REPO_NAME.csproj" --configuration Release --no-incremental --force --nologo
 
       - name: Publish GitHub release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          generate_release_notes: true
-          draft: false
-          files: ./.artifacts/Release/Plugins/STranslate.Plugin.Ocr.VisionModel/plugins/STranslate.Plugin.Ocr.VisionModel.spkg
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: gh release create "${{ github.ref_name }}" ".\.artifacts\Release\Plugins\STranslate.Plugin.Ocr.VisionModel\plugins\STranslate.Plugin.Ocr.VisionModel.spkg" --generate-notes --verify-tag
